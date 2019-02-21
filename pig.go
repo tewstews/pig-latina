@@ -8,6 +8,9 @@ const (
 	punctuation = ",./&!?:;\\|/!@#$%^&*()-_+"
 )
 
+// todo добаивть проверку, в каком регистре было переданно слово,
+// если слово одно - сохранять регистр всего слова
+
 type translator struct {
 	VowelsSfx     string
 	ConsonantsSfx string
