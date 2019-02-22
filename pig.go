@@ -1,15 +1,14 @@
 package pig
 
-import "strings"
-
+import (
+	"strings"
+	"unicode"
+)
 
 const (
 	vowels      = "aeiou"
 	punctuation = ",./&!?:;\\|/!@#$%^&*()-_+"
 )
-
-// todo добаивть проверку, в каком регистре было переданно слово,
-// если слово одно - сохранять регистр всего слова
 
 type translator struct {
 	VowelsSfx     string
@@ -70,11 +69,20 @@ func (cfg *translator) Translate(textfields ...string) []string {
 	var stagingContainer []string
 	var cons string
 	var punc string
+	var isFirstTitle bool
 
 	for _, words := range textfields {
 		var splitted = strings.Fields(words)
 
-		for _, word := range splitted {
+		for i, word := range splitted {
+
+			if i == 0 {
+				if unicode.IsUpper(rune(word[0])) {
+					isFirstTitle = true
+				}
+
+				word = strings.ToLower(word)
+			}
 			// todo get rid of the crutch
 			if strings.Contains(punctuation, word) {
 				punc = word
@@ -90,7 +98,7 @@ func (cfg *translator) Translate(textfields ...string) []string {
 			}
 
 			for _, letter := range word {
-				if containPunctuation(string(letter)) {
+				if strings.ContainsAny(punctuation, string(letter)) {
 					word = word[:len(word)-1]
 					punc = string(letter)
 				}
@@ -111,9 +119,13 @@ func (cfg *translator) Translate(textfields ...string) []string {
 			stagingContainer = append(stagingContainer, word)
 		}
 
-		stagingContainer[0] = strings.Title(stagingContainer[0])
+		if isFirstTitle {
+			stagingContainer[0] = strings.Title(stagingContainer[0])
+		}
+
 		resultContainer = append(resultContainer, strings.Join(stagingContainer, " "))
 		stagingContainer = stagingContainer[0:0]
 	}
+
 	return resultContainer
 }
