@@ -31,17 +31,6 @@ func isFirstVowel(s string) bool {
 	return false
 }
 
-func containPunctuation(s string) bool {
-	for _, k := range punctuation {
-		for _, j := range s {
-			if k == j {
-				return true
-			}
-		}
-	}
-	return false
-}
-
 // take all consonants from words begin
 func separateCons(s string) string {
 	var cons []string
@@ -74,20 +63,19 @@ func (cfg *translator) Translate(textfields ...string) []string {
 	for _, words := range textfields {
 		var splitted = strings.Fields(words)
 
-		for i, word := range splitted {
+		for _, word := range splitted {
 
-			if i == 0 {
-				if unicode.IsUpper(rune(word[0])) {
-					isFirstTitle = true
+			if unicode.IsUpper(rune(word[0])) {
+				isFirstTitle = true
+			}
+
+			for _, letter := range word {
+				if strings.ContainsAny(punctuation, string(letter)) {
+					punc = punc + string(letter)
+					word = word[:len(word)-len(punc)]
 				}
+			}
 
-				word = strings.ToLower(word)
-			}
-			// todo get rid of the crutch
-			if strings.Contains(punctuation, word) {
-				punc = word
-				continue
-			}
 			word = strings.TrimSpace(word)
 			if cfg.IgnoreE &&
 				word[len(word)-1:] == "e" &&
@@ -97,30 +85,23 @@ func (cfg *translator) Translate(textfields ...string) []string {
 
 			}
 
-			for _, letter := range word {
-				if strings.ContainsAny(punctuation, string(letter)) {
-					word = word[:len(word)-1]
-					punc = string(letter)
-				}
-			}
-
 			if !isFirstVowel(word) {
 				cons = separateCons(word)
+				word = word[len(cons):] + cons + cfg.ConsonantsSfx
 			} else {
-				cons = cons[0:0]
+				word = word+ cfg.VowelsSfx
 			}
 
-			word = word[len(cons):] + cons + cfg.ConsonantsSfx
 			if punc != "" {
 				word = word + punc
 				punc = punc[0:0]
 			}
-
+			word = strings.ToLower(word)
+			if isFirstTitle {
+				word = strings.Title(word)
+				isFirstTitle = false
+			}
 			stagingContainer = append(stagingContainer, word)
-		}
-
-		if isFirstTitle {
-			stagingContainer[0] = strings.Title(stagingContainer[0])
 		}
 
 		resultContainer = append(resultContainer, strings.Join(stagingContainer, " "))
