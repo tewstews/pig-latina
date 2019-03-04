@@ -26,6 +26,7 @@ main()  {
 	trs := pig.New("hay", "ay", true)
 
 	translation := trs.Translate("There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form")
+	}
   ```
   ``` 
  //output
